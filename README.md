@@ -1,3 +1,5 @@
+This is a proof of concept for displaying track genres. Use at your own risk; there's too many hacks (in both UI and functionality) for this to be maintainable.
+
 # Spicetify DJ Info
 
 Welcome to the Spicetify DJ Info Extension! This extension enhances your Spicetify experience by providing valuable song analysis data for each track, including Key, BPM, Popularity and Year. With this extension, you can gain deeper insights into your music library and discover songs perfectly fitting into your DJ set or Playlist.

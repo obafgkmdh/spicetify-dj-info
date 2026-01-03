@@ -207,9 +207,62 @@ const trackMetadataJsonDescriptor = {
   }
 }
 
+const trackDescriptorJsonDescriptor = {
+  nested: {
+    Message: {
+      fields: {
+        header: { type: "Header", id: 1, },
+        extension_kind: { type: "uint32", id: 2 },
+        response: { type: "Response", id: 3, rule: "repeated" }
+      }
+    },
+    Header: {
+      fields: {
+        status: { type: "uint32", id: 1 },
+        cache_ttl: { type: "uint32", id: 2 },
+        offline_ttl: { type: "uint32", id: 3 }
+      }
+    },
+    Response: {
+      fields: {
+        info: { type: "ResponseInfo", id: 1 },
+        track: { type: "string", id: 2 },
+        descriptors: { type: "TrackDescriptorWrapper", id: 3, rule: "optional" }
+      }
+    },
+    ResponseInfo: {
+      fields: {
+        status: { type: "uint32", id: 1 },
+        etag: { type: "string", id: 2, rule: "optional" },
+        locale: { type: "string", id: 3, rule: "optional" },
+        cache_ttl: { type: "uint32", id: 4 },
+        offline_ttl: { type: "uint32", id: 5 }
+      }
+    },
+    TrackDescriptorWrapper: {
+      fields: {
+        typestr: { type: "string", id: 1 },
+        inner: { type: "TrackDescriptor", id: 2 }
+      }
+    },
+    TrackDescriptor: {
+      fields: {
+        descriptors: { type: "Descriptor", id: 1, rule: "repeated" }
+      }
+    },
+    Descriptor: {
+      fields: {
+        confidence: { type: "float", id: 2 },
+        localized_name: { type: "string", id: 5 }
+      }
+    },
+  }
+}
+
 const extendedMetadataRequest = protobuf.Root.fromJSON(extendedMetadataJsonDescriptor).lookup("Message");
 const audioFeaturesResponse = protobuf.Root.fromJSON(audioFeaturesJsonDescriptor).lookup("Message");
 const trackMetadataResponse = protobuf.Root.fromJSON(trackMetadataJsonDescriptor).lookup("Message");
+const trackDescriptorResponse = protobuf.Root.fromJSON(trackDescriptorJsonDescriptor).lookup("Message");
 
 (async function djInfoList() {
   // waiting while loading
@@ -681,6 +734,17 @@ button.btn:hover {
     return new Uint8Array(await resp.arrayBuffer());
   }
 
+  const getGenres = async (ids) => {
+    const buf = await getExtendedMetadata(ids.map((id) => `spotify:track:${id}`), 6);
+    const msg = trackDescriptorResponse.decode(buf);
+
+    return msg.response.map((resp) => {
+      const descriptors = resp?.descriptors?.inner?.descriptors;
+      if (!descriptors) return null;
+      return descriptors;
+    })
+  };
+
   const getFeatures = async (ids) => {
     const buf = await getExtendedMetadata(ids.map((id) => `spotify:track:${id}`), 222);
     const msg = audioFeaturesResponse.decode(buf);
@@ -762,6 +826,7 @@ button.btn:hover {
     });
   };
 
+  const localDb = {};
   const processTrackInfoQueue = async () => {
     if (trackInfoQueue.size === 0) return;
 
@@ -773,6 +838,9 @@ button.btn:hover {
     for (let i = 0; i < ids.length; i += CHUNK_SIZE) {
       const chunk = ids.slice(i, i + CHUNK_SIZE);
       await getTrackInfoBatch(chunk);
+      (await getGenres(chunk)).forEach((genres, j) => {
+        localDb[chunk[j]] = genres;
+      });
     }
 
     queueSnapshot.forEach((elements, id) => {
@@ -852,29 +920,45 @@ button.btn:hover {
     const info = trackDb[id];
 
     if (info) {
-      if (hasdjinfo) return;
-      const parsedInfo = info;
-      const keyInNotation = getKeyInNotation(parsedInfo.key, parsedInfo.mode);
-      let display_text = [];
-      if (CONFIG.isKeyEnabled || CONFIG.isCamelotEnabled) display_text.push(`${keyInNotation}`);
-      if (CONFIG.isBPMEnabled) display_text.push(`${parsedInfo.tempo} ♫`);
-      if (CONFIG.isEnergyEnabled) display_text.push(`E ${parsedInfo.energy}`);
-      if (CONFIG.isDanceEnabled) display_text.push(`D ${parsedInfo.danceability}`);
-      if (CONFIG.isPopularityEnabled) display_text.push(`♥ ${parsedInfo.popularity}`);
-      if (CONFIG.isYearEnabled) display_text.push(`${parsedInfo.release_date}`);
-      display_text = display_text.join(" | ");
+      if (!hasdjinfo) {
+        const parsedInfo = info;
+        const keyInNotation = getKeyInNotation(parsedInfo.key, parsedInfo.mode);
+        let display_text = [];
+        if (CONFIG.isKeyEnabled || CONFIG.isCamelotEnabled) display_text.push(`${keyInNotation}`);
+        if (CONFIG.isBPMEnabled) display_text.push(`${parsedInfo.tempo} ♫`);
+        if (CONFIG.isEnergyEnabled) display_text.push(`E ${parsedInfo.energy}`);
+        if (CONFIG.isDanceEnabled) display_text.push(`D ${parsedInfo.danceability}`);
+        if (CONFIG.isPopularityEnabled) display_text.push(`♥ ${parsedInfo.popularity}`);
+        if (CONFIG.isYearEnabled) display_text.push(`${parsedInfo.release_date}`);
+        display_text = display_text.join(" | ");
 
-      const text = document.createElement("p");
-      text.innerHTML = display_text;
-      text.classList.add("djinfo");
-      text.classList.add("djinfo-animate");
-      text.style.fontSize = "12px";
-      djInfoColumn.innerHTML = ""; // Clear previous content
-      djInfoColumn.appendChild(text);
+        const text = document.createElement("p");
+        text.innerHTML = display_text;
+        text.classList.add("djinfo");
+        text.classList.add("djinfo-animate");
+        text.style.fontSize = "12px";
+        djInfoColumn.innerHTML = ""; // Clear previous content
+        djInfoColumn.appendChild(text);
+      }
+
+      let ele = track.querySelector(".track-genres");
+      if (!ele) {
+        ele = document.createElement("div");
+        ele.classList.add("track-genres");
+        ele.style.position = "absolute";
+        ele.style.bottom = "-2px";
+        ele.style.right = "0px";
+        ele.style.fontSize = "7.5px";
+        ele.style.textAlign = "right";
+        djInfoColumn.appendChild(ele);
+      }
+      ele.innerHTML = (localDb[id] ?? (queueTrackInfo(id, track), [])).map(({confidence, localized_name}) => `<span style="opacity: ${confidence}">${localized_name}</span>`).join(", ");
     } else {
       if (hasdjinfo) {
         const djinfoElement = track.querySelector(".djinfo");
         if (djinfoElement) djinfoElement.remove();
+        const genresElement = track.querySelector(".track-genres");
+        if (genresElement) genresElement.remove();
       }
       queueTrackInfo(id, track);
     }
@@ -998,6 +1082,21 @@ button.btn:hover {
       });
     }
     nowPlayingWidgetdjInfoData.style.fontSize = "11px";
+
+    const [genres] = await getGenres([id]);
+    let ele = document.getElementById("track-genres");
+    if (ele === null) {
+      ele = document.createElement("div");
+      ele.id = "track-genres";
+      ele.style.position = "absolute";
+      ele.style.bottom = "-2px";
+      ele.style.left = "80px";
+      ele.style.fontSize = "8px";
+      const nowPlayingWidget = document.querySelector(".main-nowPlayingBar-nowPlayingBar");
+      nowPlayingWidget.style.position = "relative";
+      nowPlayingWidget.appendChild(ele);
+    }
+    ele.innerHTML = genres.map(({confidence, localized_name}) => `<span style="opacity: ${confidence}">${localized_name}</span>`).join(", ");
   };
 
   Spicetify.Player.addEventListener("songchange", () => {
