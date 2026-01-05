@@ -685,7 +685,7 @@ button.btn:hover {
     return msg.response.map((resp) => {
       const descriptors = resp?.descriptors?.inner?.descriptors;
       if (!descriptors) return null;
-      return descriptors;
+      return { id: resp?.track.split(":")[2], descriptors };
     })
   };
 
@@ -778,8 +778,8 @@ button.btn:hover {
     for (let i = 0; i < ids.length; i += CHUNK_SIZE) {
       const chunk = ids.slice(i, i + CHUNK_SIZE);
       await getTrackInfoBatch(chunk);
-      (await getGenres(chunk)).forEach((genres, j) => {
-        localDb[chunk[j]] = genres;
+      (await getGenres(chunk)).forEach(resp => {
+        localDb[resp.id] = resp.descriptors;
       });
     }
 
@@ -1023,7 +1023,7 @@ button.btn:hover {
     }
     nowPlayingWidgetdjInfoData.style.fontSize = "11px";
 
-    const [genres] = await getGenres([id]);
+    const [genreResult] = await getGenres([id]);
     let ele = document.getElementById("track-genres");
     if (ele === null) {
       ele = document.createElement("div");
@@ -1036,7 +1036,9 @@ button.btn:hover {
       nowPlayingWidget.style.position = "relative";
       nowPlayingWidget.appendChild(ele);
     }
-    ele.innerHTML = genres.map(({confidence, localized_name}) => `<span style="opacity: ${confidence}">${localized_name}</span>`).join(", ");
+    ele.innerHTML = genreResult?.descriptors?.map(({confidence, localized_name}) => (
+      `<span style="opacity: ${confidence}">${localized_name}</span>`
+    )).join(", ") ?? "";
   };
 
   Spicetify.Player.addEventListener("songchange", () => {
