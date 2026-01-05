@@ -48,9 +48,7 @@ const audioFeaturesJsonDescriptor = {
     },
     Header: {
       fields: {
-        status: { type: "uint32", id: 1 },
-        cache_ttl: { type: "uint32", id: 2 },
-        offline_ttl: { type: "uint32", id: 3 }
+        status: { type: "uint32", id: 1 }
       }
     },
     Response: {
@@ -62,11 +60,7 @@ const audioFeaturesJsonDescriptor = {
     },
     ResponseInfo: {
       fields: {
-        status: { type: "uint32", id: 1 },
-        etag: { type: "string", id: 2, rule: "optional" },
-        locale: { type: "string", id: 3, rule: "optional" },
-        cache_ttl: { type: "uint32", id: 4 },
-        offline_ttl: { type: "uint32", id: 5 }
+        status: { type: "uint32", id: 1 }
       }
     },
     AudioAttributesWrapper: {
@@ -101,7 +95,7 @@ const trackMetadataJsonDescriptor = {
   nested: {
     Message: {
       fields: {
-        header: { type: "Header", id: 1, },
+        header: { type: "Header", id: 1 },
         extension_kind: { type: "uint32", id: 2 },
         response: { type: "Response", id: 3, rule: "repeated" }
       }
@@ -109,25 +103,18 @@ const trackMetadataJsonDescriptor = {
     Header: {
       fields: {
         status: { type: "uint32", id: 1 },
-        cache_ttl: { type: "uint32", id: 2 },
-        offline_ttl: { type: "uint32", id: 3 }
       }
     },
     Response: {
       fields: {
         info: { type: "ResponseInfo", id: 1 },
         track: { type: "string", id: 2 },
-        metadata: { type: "TrackMetadataWrapper", id: 3, rule: "optional"
-        }
+        metadata: { type: "TrackMetadataWrapper", id: 3, rule: "optional" }
       }
     },
     ResponseInfo: {
       fields: {
         status: { type: "uint32", id: 1 },
-        etag: { type: "string", id: 2, rule: "optional" },
-        locale: { type: "string", id: 3, rule: "optional" },
-        cache_ttl: { type: "uint32", id: 4 },
-        offline_ttl: { type: "uint32", id: 5 }
       }
     },
     TrackMetadataWrapper: {
@@ -145,25 +132,7 @@ const trackMetadataJsonDescriptor = {
         track_num: { type: "sint32", id: 5 },
         disc_num: { type: "sint32", id: 6 },
         duration_ms: { type: "sint32", id: 7 },
-        popularity: { type: "sint32", id: 8 },
-        external_id: { type: "bytes", id: 10, rule: "optional" },
-        restriction: { type: "bytes", id: 11, rule: "optional" },
-        file: { type: "bytes", id: 12, rule: "optional" },
-        alternative: { type: "bytes", id: 13, rule: "optional" },
-        field15: { type: "bytes", id: 15, rule: "optional" },
-        earliest_live_timestamp: { type: "uint64", id: 17, rule: "optional" },
-        has_lyrics: { type: "uint32", id: 18, rule: "optional" },
-        licensor: { type: "bytes", id: 21, rule: "optional" },
-        language_of_performance: { type: "string", id: 22, rule: "optional" },
-        original_audio: { type: "bytes", id: 24, rule: "optional" },
-        original_title: { type: "string", id: 27, rule: "optional" },
-        artist_with_role: { type: "bytes", id: 32, rule: "optional" },
-        canonical_uri: { type: "string", id: 36, rule: "optional" },
-        field37: { type: "bytes", id: 37, rule: "optional" },
-        licensor2: { type: "bytes", id: 39, rule: "optional" },
-        audio_formats: { type: "bytes", id: 41, rule: "optional" },
-        field43: { type: "uint32", id: 43, rule: "optional" },
-        implementation_details: { type: "bytes", id: 44, rule: "optional" },
+        popularity: { type: "sint32", id: 8 }
       }
     },
     AlbumMetadata: {
@@ -171,37 +140,20 @@ const trackMetadataJsonDescriptor = {
         gid: { type: "bytes", id: 1 },
         name: { type: "string", id: 2 },
         artist: { type: "Artist", id: 3, rule: "repeated" },
-        label: { type: "string", id: 5, rule: "optional" },
-        release_date: { type: "Date", id: 6, rule: "optional" },
-        cover_group: { type: "CoverGroup", id: 17, },
-        licensor: { type: "bytes", id: 25, rule: "optional" },
-        field37: { type: "bytes", id: 37, rule: "optional" },
+        release_date: { type: "Date", id: 6, rule: "optional" }
       }
     },
     Artist: {
       fields: {
         gid: { type: "bytes", id: 1 },
-        name: { type: "string", id: 2 },
+        name: { type: "string", id: 2 }
       }
     },
     Date: {
       fields: {
         year: { type: "sint32", id: 1 },
-        month: { type: "sint32", id: 2 },
-        day: { type: "sint32", id: 3 },
-      }
-    },
-    CoverGroup: {
-      fields: {
-        image: { type: "Image", id: 1, rule: "repeated" },
-      }
-    },
-    Image: {
-      fields: {
-        file_id: { type: "bytes", id: 1 },
-        size: { type: "uint32", id: 2 },
-        width: { type: "sint32", id: 3 },
-        height: { type: "sint32", id: 4 },
+        month: { type: "sint32", id: 2, rule: "optional" },
+        day: { type: "sint32", id: 3, rule: "optional" }
       }
     }
   }
@@ -308,7 +260,7 @@ const trackDescriptorResponse = protobuf.Root.fromJSON(trackDescriptorJsonDescri
       isPopularityEnabled: true,
       isEnergyEnabled: false,
       isDanceEnabled: false,
-      isYearEnabled: false,
+      isYearEnabled: true,
     };
   }
 
@@ -576,16 +528,6 @@ button.btn:hover {
         name: "Enable Popularity",
         field: "isPopularityEnabled",
       }),
-      /*
-      react.createElement(ConfigItem, {
-        name: "Enable Energy",
-        field: "isEnergyEnabled",
-      }),
-      react.createElement(ConfigItem, {
-        name: "Enable Danceability",
-        field: "isDanceEnabled",
-      }),
-      */
       react.createElement(ConfigItem, {
         name: "Enable Year",
         field: "isYearEnabled",
@@ -619,16 +561,18 @@ button.btn:hover {
     return keyInStandard; // else return key in standard notation
   };
 
-  var djTrackInfo = class {
+  const djTrackInfo = class {
     // Class for DJ Info in local storage
-    constructor(res, resTrack) {
-      this.key = res.key;
-      this.mode = res.mode;
-      this.tempo = Math.round(res.tempo);
-      this.energy = Math.round(100 * res.energy);
-      this.danceability = Math.round(100 * res.danceability);
-      this.popularity = resTrack.popularity;
-      this.release_date = resTrack.album.release_date.split("-")[0];
+    static fromQueries(res, resTrack) {
+      return {
+        key: res.key,
+        mode: res.mode,
+        tempo: Math.round(res.tempo),
+        energy: Math.round(100 * res.energy),
+        danceability: Math.round(100 * res.danceability),
+        popularity: resTrack.popularity,
+        release_date: resTrack.release_date.split("-")[0]
+      };
     }
     static from(obj) {
       if (typeof obj === "string") {
@@ -719,7 +663,7 @@ button.btn:hover {
       ))
     }).finish();
 
-    const resp = await fetch("https://spclient.wg.spotify.com/extended-metadata/v0/extended-metadata",{
+    const resp = await fetch("https://spclient.wg.spotify.com/extended-metadata/v0/extended-metadata", {
       method: "POST",
       body: payload,
       headers: {
@@ -732,7 +676,7 @@ button.btn:hover {
     });
 
     return new Uint8Array(await resp.arrayBuffer());
-  }
+  };
 
   const getGenres = async (ids) => {
     const buf = await getExtendedMetadata(ids.map((id) => `spotify:track:${id}`), 6);
@@ -749,38 +693,34 @@ button.btn:hover {
     const buf = await getExtendedMetadata(ids.map((id) => `spotify:track:${id}`), 222);
     const msg = audioFeaturesResponse.decode(buf);
 
-    return {
-      audio_features: msg.response.map((resp) => {
-        if (!resp.attributes) return null;
-        return {
-          id: resp.track.split(":")[2],
-          tempo: resp.attributes.attributes.bpm,
-          key: "C C# D D# E F F# G G# A A# B".split(" ").indexOf(resp.attributes.attributes.key.key),
-          mode: resp.attributes.attributes.key.majorMinor - 1,
-        }
-      })
-    }
+    return msg.response.map((resp) => {
+      if (!resp.attributes) return null;
+      const attributes = resp.attributes.attributes;
+      return {
+        id: resp.track.split(":")[2],
+        tempo: attributes.bpm,
+        key: "C C# D D# E F F# G G# A A# B".split(" ").indexOf(attributes.key.key),
+        mode: attributes.key.majorMinor - 1
+      }
+    });
   };
 
   const getTrackFeatures = async (ids) => {
     const buf = await getExtendedMetadata(ids.map((id) => `spotify:track:${id}`), 10);
     const msg = trackMetadataResponse.decode(buf);
 
-    return {
-      tracks: msg.response.map((resp) => {
-        if (!resp.metadata) return null;
-        const date = resp.metadata.metadata.album.release_date;
-        const date_iso = `${date.year}-${(date.month+'').padStart(2, '0')}-${(date.day+'').padStart(2, '0')}`
-        return {
-          id: resp.track.split(":")[2],
-          popularity: resp.metadata.metadata.popularity,
-          album: {
-            release_date: date_iso
-          }
-        }
-      })
-    }
-  }
+    return msg.response.map((resp) => {
+      if (!resp.metadata) return null;
+      const metadata = resp.metadata.metadata;
+      const date = metadata.album.release_date;
+      const date_iso = `${date?.year}-${(date?.month+'').padStart(2, '0')}-${(date?.day+'').padStart(2, '0')}`;
+      return {
+        id: resp.track.split(":")[2],
+        popularity: metadata.popularity,
+        release_date: date_iso
+      }
+    });
+  };
 
   const getTrackInfo = async (id) => {
     // get Track Info from local storage or request
@@ -804,12 +744,12 @@ button.btn:hover {
         const featuresRes = results[0].status === "fulfilled" ? results[0].value : null;
         const metadataRes = results[1].status === "fulfilled" ? results[1].value : null;
 
-        if (featuresRes && featuresRes.audio_features) {
-          featuresRes.audio_features.forEach((track) => {
+        if (featuresRes) {
+          featuresRes.forEach((track) => {
             if (track) {
-              const trackDetails = metadataRes?.tracks?.find((t) => t?.id === track?.id);
+              const trackDetails = metadataRes?.find((t) => t?.id === track?.id);
               if (trackDetails) {
-                const info = new djTrackInfo(track, trackDetails);
+                const info = djTrackInfo.fromQueries(track, trackDetails);
                 trackDb[track.id] = info;
               }
             }
@@ -996,11 +936,11 @@ button.btn:hover {
           break;
       }
 
-      var btn = document.createElement("button");
+      const btn = document.createElement("button");
       btn.classList.add("main-trackList-column");
       btn.classList.add("main-trackList-sortable");
       btn.classList.add("djinfoheader");
-      var title = document.createElement("span");
+      const title = document.createElement("span");
       title.classList.add("TypeElement-mesto-type");
       title.classList.add("standalone-ellipsis-one-line");
       title.innerHTML = "DJ Info";
