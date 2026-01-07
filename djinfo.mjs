@@ -683,8 +683,7 @@ button.btn:hover {
     const msg = trackDescriptorResponse.decode(buf);
 
     return msg.response.map((resp) => {
-      const descriptors = resp?.descriptors?.inner?.descriptors;
-      if (!descriptors) return null;
+      const descriptors = resp?.descriptors?.inner?.descriptors ?? [];
       return { id: resp?.track.split(":")[2], descriptors };
     })
   };
@@ -779,7 +778,7 @@ button.btn:hover {
       const chunk = ids.slice(i, i + CHUNK_SIZE);
       await getTrackInfoBatch(chunk);
       (await getGenres(chunk)).forEach(resp => {
-        localDb[resp.id] = resp.descriptors;
+        if (resp) { localDb[resp.id] = resp.descriptors; }
       });
     }
 
